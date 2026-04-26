@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">Time Block Planner</p>
+      <h1>組みたい時間の中に<br>予定ブロックを置いて見える化</h1>
+      <p class="hero-copy">
+        使える時間を決めて、その中に予定を並べていくシンプルな可視化ツールです。
+      </p>
+    </section>
+
+    <section class="panel layout-grid">
+      <div class="controls">
+        <form id="availability-form" class="card">
+          <div class="card-header">
+            <h2>使える時間</h2>
+            <p>この範囲がタイムライン全体になります。</p>
+          </div>
+
+          <label>
+            開始
+            <input type="time" id="day-start" value="09:00" required>
+          </label>
+
+          <label>
+            終了
+            <input type="time" id="day-end" value="18:00" required>
+          </label>
+
+          <button type="submit">時間帯を更新</button>
+        </form>
+
+        <form id="event-form" class="card">
+          <div class="card-header">
+            <h2>予定を追加</h2>
+            <p>時間帯の中に入る予定を、未配置ブロックとして作成します。</p>
+          </div>
+
+          <label>
+            タイトル
+            <input type="text" id="event-title" placeholder="例: デザイン作業" maxlength="40" required>
+          </label>
+
+          <fieldset class="mode-switch">
+            <legend>入力方法</legend>
+            <label class="mode-option">
+              <input type="radio" name="event-mode" id="event-mode-duration" value="duration" checked>
+              所要時間
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="event-mode" id="event-mode-range" value="range">
+              時間指定
+            </label>
+          </fieldset>
+
+          <div id="duration-fields">
+            <label>
+              所要時間
+              <input type="number" id="event-duration" value="90" min="15" step="15" required>
+            </label>
+          </div>
+
+          <div id="range-fields" class="inline-fields" hidden>
+            <label>
+              開始
+              <input type="time" id="event-start" value="10:00">
+            </label>
+            <label>
+              終了
+              <input type="time" id="event-end" value="11:30">
+            </label>
+          </div>
+
+          <label>
+            色
+            <input type="color" id="event-color" value="#ff7a59">
+          </label>
+
+          <button type="submit">ブロックを追加</button>
+        </form>
+
+        <section class="card summary-card">
+          <div class="card-header">
+            <h2>サマリー</h2>
+            <p>使える時間と予定の埋まり具合です。</p>
+          </div>
+          <div class="summary-stats">
+            <div>
+              <span class="summary-label">全体</span>
+              <strong id="total-duration">0h</strong>
+            </div>
+            <div>
+              <span class="summary-label">予定あり</span>
+              <strong id="planned-duration">0h</strong>
+            </div>
+            <div>
+              <span class="summary-label">空き</span>
+              <strong id="free-duration">0h</strong>
+            </div>
+          </div>
+          <p id="feedback" class="feedback" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <div class="timeline-column">
+        <section class="card timeline-card">
+          <div class="card-header">
+            <div class="timeline-header-row">
+              <div>
+                <h2>タイムライン</h2>
+                <p>入力した時間帯に予定ブロックを配置します。</p>
+              </div>
+              <div class="header-actions">
+                <button id="save-timeline-image" class="secondary-button" type="button">画像を保存</button>
+                <button id="reset-timeline" class="secondary-button" type="button">タイムラインをリセット</button>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-wrap">
+            <div id="timeline-hours" class="timeline-hours" aria-hidden="true"></div>
+            <div id="timeline" class="timeline"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div class="timeline-header-row">
+              <div>
+                <h2>未配置ブロック</h2>
+                <p>下で作ったブロックをドラッグして、タイムラインに直接置けます。</p>
+              </div>
+              <button id="clear-pending-blocks" class="secondary-button" type="button">一括削除</button>
+            </div>
+          </div>
+          <ul id="pending-block-list" class="pending-block-list"></ul>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div class="timeline-header-row">
+              <div>
+                <h2>予定一覧</h2>
+                <p>登録済みの予定を確認・削除できます。</p>
+              </div>
+              <button id="clear-events" class="secondary-button" type="button">一括削除</button>
+            </div>
+          </div>
+          <ul id="event-list" class="event-list"></ul>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
