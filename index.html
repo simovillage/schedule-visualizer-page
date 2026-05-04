@@ -19,8 +19,8 @@
       </p>
     </section>
 
-    <section class="panel layout-grid">
-      <div class="controls">
+    <section class="panel app-grid">
+      <div class="top-forms-row">
         <form id="availability-form" class="card">
           <div class="card-header">
             <h2>使える時間</h2>
@@ -53,31 +53,33 @@
 
           <fieldset class="mode-switch">
             <legend>入力方法</legend>
-            <label class="mode-option">
-              <input type="radio" name="event-mode" id="event-mode-duration" value="duration" checked>
-              所要時間
-            </label>
-            <label class="mode-option">
-              <input type="radio" name="event-mode" id="event-mode-range" value="range">
-              時間指定
-            </label>
+            <div class="mode-switch-options">
+              <label class="mode-option">
+                <input type="radio" name="event-mode" id="event-mode-duration" value="duration" checked>
+                所要時間
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="event-mode" id="event-mode-range" value="range">
+                時間指定
+              </label>
+            </div>
           </fieldset>
 
           <div id="duration-fields">
             <label>
               所要時間
-              <input type="number" id="event-duration" value="90" min="15" step="15" required>
+              <input type="number" id="event-duration" value="30" min="15" step="15" required>
             </label>
           </div>
 
           <div id="range-fields" class="inline-fields" hidden>
             <label>
               開始
-              <input type="time" id="event-start" value="10:00">
+              <input type="time" id="event-start" value="17:45">
             </label>
             <label>
               終了
-              <input type="time" id="event-end" value="11:30">
+              <input type="time" id="event-end" value="18:15">
             </label>
           </div>
 
@@ -113,37 +115,39 @@
       </div>
 
       <div class="timeline-column">
-        <section class="card timeline-card">
-          <div class="card-header">
-            <div class="timeline-header-row">
-              <div>
-                <h2>タイムライン</h2>
-                <p>入力した時間帯に予定ブロックを配置します。</p>
-              </div>
-              <div class="header-actions">
-                <button id="save-timeline-image" class="secondary-button" type="button">画像を保存</button>
-                <button id="reset-timeline" class="secondary-button" type="button">タイムラインをリセット</button>
+        <div class="timeline-main-row">
+          <section class="card timeline-card">
+            <div class="card-header">
+              <div class="timeline-header-row">
+                <div>
+                  <h2>タイムライン</h2>
+                  <p>入力した時間帯に予定ブロックを配置します。</p>
+                </div>
+                <div class="header-actions">
+                  <button id="save-timeline-image" class="secondary-button" type="button">画像を保存</button>
+                  <button id="reset-timeline" class="secondary-button" type="button">タイムラインをリセット</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="timeline-wrap">
-            <div id="timeline-hours" class="timeline-hours" aria-hidden="true"></div>
-            <div id="timeline" class="timeline"></div>
-          </div>
-        </section>
+            <div class="timeline-wrap">
+              <div id="timeline-hours" class="timeline-hours" aria-hidden="true"></div>
+              <div id="timeline" class="timeline"></div>
+            </div>
+          </section>
 
-        <section class="card">
-          <div class="card-header">
-            <div class="timeline-header-row">
-              <div>
-                <h2>未配置ブロック</h2>
-                <p>下で作ったブロックをドラッグして、タイムラインに直接置けます。</p>
+          <section class="card pending-card">
+            <div class="card-header">
+              <div class="timeline-header-row">
+                <div>
+                  <h2>未配置ブロック</h2>
+                  <p>ドラッグしてタイムラインに直接置けます。</p>
+                </div>
+                <button id="clear-pending-blocks" class="secondary-button" type="button">一括削除</button>
               </div>
-              <button id="clear-pending-blocks" class="secondary-button" type="button">一括削除</button>
             </div>
-          </div>
-          <ul id="pending-block-list" class="pending-block-list"></ul>
-        </section>
+            <ul id="pending-block-list" class="pending-block-list"></ul>
+          </section>
+        </div>
 
         <section class="card">
           <div class="card-header">

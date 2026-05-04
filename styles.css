@@ -84,16 +84,33 @@ body::before {
   box-shadow: var(--shadow);
 }
 
+.app-grid {
+  display: grid;
+  gap: 18px;
+}
+
 .layout-grid {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
   gap: 18px;
 }
 
-.controls,
+.top-forms-row,
 .timeline-column {
   display: grid;
   gap: 18px;
+}
+
+.top-forms-row {
+  grid-template-columns: 280px 360px minmax(260px, 1fr);
+  align-items: start;
+}
+
+.timeline-main-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
 }
 
 .card {
@@ -156,11 +173,21 @@ form label {
   font-weight: 500;
 }
 
+.mode-switch-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .mode-option {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(92, 65, 36, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.56);
 }
 
 .mode-option input {
@@ -260,6 +287,10 @@ button:hover {
   min-height: 660px;
 }
 
+.pending-card {
+  align-self: start;
+}
+
 .timeline-wrap {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
@@ -286,22 +317,29 @@ button:hover {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
+  --half-line-step: 72px;
+  --hour-line-step: 144px;
+  --hour-line-offset: 0px;
+  --half-hour-line-offset: 0px;
   background-color: #fffdf9;
   background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(74, 74, 74, 0.5) 0,
+      rgba(74, 74, 74, 0.5) 2px,
+      transparent 2px,
+      transparent var(--hour-line-step)
+    ),
     repeating-linear-gradient(
       to bottom,
       rgba(130, 130, 130, 0.28) 0,
       rgba(130, 130, 130, 0.28) 1px,
       transparent 1px,
-      transparent 36px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(92, 92, 92, 0.28) 0,
-      rgba(92, 92, 92, 0.28) 2px,
-      transparent 1px,
-      transparent 72px
+      transparent var(--half-line-step)
     );
+  background-position:
+    0 var(--hour-line-offset),
+    0 var(--half-hour-line-offset);
   border: 1px solid rgba(92, 65, 36, 0.16);
 }
 
@@ -595,7 +633,8 @@ button:hover {
     zoom: 0.9;
   }
 
-  .layout-grid {
+  .top-forms-row,
+  .timeline-main-row {
     grid-template-columns: 1fr;
   }
 
@@ -630,6 +669,7 @@ button:hover {
   }
 
   .inline-fields,
+  .mode-switch-options,
   .summary-stats,
   .timeline-wrap {
     grid-template-columns: 1fr;

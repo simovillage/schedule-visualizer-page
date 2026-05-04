@@ -25,22 +25,23 @@ const clearPendingBlocksButton = document.getElementById("clear-pending-blocks")
 const clearEventsButton = document.getElementById("clear-events");
 
 const state = {
-  dayStart: "18:00",
-  dayEnd: "20:00",
-  events: [
-
-  ],
+  dayStart: "17:45",
+  dayEnd: "23:00",
+  events: [],
   pendingBlocks: [
-    { id: crypto.randomUUID(), title: "風呂", duration: 60, color: "#a8c686" }, 
+    { id: crypto.randomUUID(), title: "風呂", duration: 60, color: "#a8c686" },
     { id: crypto.randomUUID(), title: "調理", duration: 30, color: "#a8c686" },
     { id: crypto.randomUUID(), title: "食事", duration: 30, color: "#a8c686" },
-    { id: crypto.randomUUID(), title: "皿洗い", duration: 30, color: "#a8c686" }, 
-    { id: crypto.randomUUID(), title: "明日の準備", duration: 15, color: "#a8c686" },
+    { id: crypto.randomUUID(), title: "皿洗い", duration: 30, color: "#a8c686" },
+    { id: crypto.randomUUID(), title: "明日の準備", duration: 15, color: "#a8c686" }
   ]
 };
 
+const DEFAULT_DURATION_MINUTES = 30;
+const DEFAULT_RANGE_OFFSET_MINUTES = 0;
 const MINUTE_HEIGHT = 2.4;
 const DROP_STEP_MINUTES = 15;
+
 let dropPreview = null;
 
 function timeToMinutes(value) {
@@ -114,6 +115,18 @@ function getDayDuration() {
   return timeToMinutes(state.dayEnd) - timeToMinutes(state.dayStart);
 }
 
+function getDefaultRangeValues() {
+  const dayStartMinutes = timeToMinutes(state.dayStart);
+  const dayEndMinutes = timeToMinutes(state.dayEnd);
+  const defaultStartMinutes = Math.min(dayStartMinutes + DEFAULT_RANGE_OFFSET_MINUTES, dayEndMinutes);
+  const defaultEndMinutes = Math.min(defaultStartMinutes + DEFAULT_DURATION_MINUTES, dayEndMinutes);
+
+  return {
+    start: minutesToTime(defaultStartMinutes),
+    end: minutesToTime(defaultEndMinutes)
+  };
+}
+
 function getTimelineDisplayStart() {
   return timeToMinutes(state.dayStart);
 }
@@ -124,6 +137,19 @@ function getTimelineDisplayEnd() {
 
 function getTimelineDisplayDuration() {
   return getTimelineDisplayEnd() - getTimelineDisplayStart();
+}
+
+function syncTimelineGridOffsets() {
+  const displayStart = getTimelineDisplayStart();
+  const minutesToNextHour = (60 - (displayStart % 60)) % 60;
+  const minutesToNextHalfHour = (30 - (displayStart % 30)) % 30;
+  const hourOffset = minutesToNextHour * MINUTE_HEIGHT;
+  const halfHourOffset = minutesToNextHalfHour * MINUTE_HEIGHT;
+
+  timeline.style.setProperty("--hour-line-offset", `${hourOffset}px`);
+  timeline.style.setProperty("--half-hour-line-offset", `${halfHourOffset}px`);
+  timeline.style.setProperty("--half-line-step", `${30 * MINUTE_HEIGHT}px`);
+  timeline.style.setProperty("--hour-line-step", `${60 * MINUTE_HEIGHT}px`);
 }
 
 function validateAvailability(start, end) {
@@ -232,7 +258,7 @@ function renderTimeline() {
   if (state.events.length === 0) {
     const empty = document.createElement("div");
     empty.className = "timeline-empty";
-    empty.textContent = "まだ予定がありません。下の未配置ブロックをドラッグして配置してください。";
+    empty.textContent = "まだ予定がありません。未配置ブロックをドラッグして配置してください。";
     timeline.appendChild(empty);
   }
 
@@ -245,16 +271,18 @@ function renderTimeline() {
 
     const block = document.createElement("article");
     block.className = "event-block";
+
     if (blockDuration <= 15) {
       block.classList.add("event-block-compact");
     }
+
     block.draggable = true;
     block.dataset.eventId = event.id;
     block.style.top = `${top}px`;
     block.style.height = `${height}px`;
     block.style.background = tintColor(event.color, 0.45);
     block.innerHTML = `
-      <button class="event-block-delete" data-event-delete="${event.id}" type="button" aria-label="予定を削除">×</button>
+      <button class="event-block-delete" data-event-delete="${event.id}" type="button" aria-label="予定を未配置ブロックに戻す">×</button>
       <span class="event-time">${formatRange(event.start, event.end)}</span>
       <div class="event-heading">
         <strong class="event-title">${event.title}</strong>
@@ -299,7 +327,7 @@ function renderPendingBlocks() {
   if (state.pendingBlocks.length === 0) {
     const item = document.createElement("li");
     item.className = "pending-empty";
-    item.textContent = "未配置ブロックはありません。フォームから新しく作成してください。";
+    item.textContent = "未配置ブロックはありません。フォームから追加してください。";
     pendingBlockList.appendChild(item);
     return;
   }
@@ -335,10 +363,17 @@ function syncAvailabilityInputs() {
   dayEndInput.value = state.dayEnd;
 }
 
+function syncDefaultRangeInputs() {
+  const defaults = getDefaultRangeValues();
+  eventStartInput.value = defaults.start;
+  eventEndInput.value = defaults.end;
+}
+
 function render() {
   sortEvents();
   syncAvailabilityInputs();
   syncEventModeFields();
+  syncTimelineGridOffsets();
   renderTimeline();
   renderHourLabels();
   renderPendingBlocks();
@@ -357,7 +392,7 @@ function createPendingBlock(title, duration, color) {
 
 function resetTimeline() {
   if (state.events.length === 0) {
-    setFeedback("戻す予定はまだありません。", true);
+    setFeedback("戻す予定はありません。", true);
     return;
   }
 
@@ -366,7 +401,7 @@ function resetTimeline() {
   });
   state.events = [];
   render();
-  setFeedback("タイムライン上の予定を未配置ブロックへ戻しました。");
+  setFeedback("タイムライン上の予定を未配置ブロックに戻しました。");
 }
 
 function clearPendingBlocks() {
@@ -444,6 +479,9 @@ function saveTimelineImage() {
   context.lineWidth = 1;
   context.strokeRect(timelineX, timelineY, timelineWidth, timelineHeight);
 
+  const minutesToNextHour = (60 - (displayStart % 60)) % 60;
+  const hourLineOffset = minutesToNextHour * MINUTE_HEIGHT;
+
   for (let y = 0; y <= timelineHeight; y += 36) {
     context.beginPath();
     context.strokeStyle = "rgba(101, 101, 101, 0.1)";
@@ -462,15 +500,38 @@ function saveTimelineImage() {
     context.stroke();
   }
 
+  for (let y = hourLineOffset; y <= timelineHeight; y += 144) {
+    context.beginPath();
+    context.strokeStyle = "rgba(74, 74, 74, 0.5)";
+    context.lineWidth = 2;
+    context.moveTo(timelineX, timelineY + y);
+    context.lineTo(timelineX + timelineWidth, timelineY + y);
+    context.stroke();
+  }
+
   context.fillStyle = "#766554";
   context.font = "700 13px 'Space Grotesk', sans-serif";
   context.textAlign = "right";
   context.textBaseline = "middle";
 
-  for (let minutes = displayStart; minutes <= displayEnd; minutes += 60) {
+  const labelMinutes = [displayStart];
+  let nextHour = Math.ceil(displayStart / 60) * 60;
+  if (nextHour === displayStart) {
+    nextHour += 60;
+  }
+
+  for (let minutes = nextHour; minutes < displayEnd; minutes += 60) {
+    labelMinutes.push(minutes);
+  }
+
+  if (displayEnd !== displayStart) {
+    labelMinutes.push(displayEnd);
+  }
+
+  labelMinutes.forEach((minutes) => {
     const top = ((minutes - displayStart) / getTimelineDisplayDuration()) * timelineHeight;
     context.fillText(minutesToTime(minutes), timelineX - 6, timelineY + top);
-  }
+  });
 
   state.events.forEach((event) => {
     const blockStart = timeToMinutes(event.start);
@@ -504,8 +565,7 @@ function saveTimelineImage() {
     context.font = "12px 'Space Grotesk', sans-serif";
     context.fillStyle = "#5f5144";
     const titleWidth = context.measureText(event.title).width;
-    const durationX = x + 14 + titleWidth + 8;
-    context.fillText(durationText, durationX, titleY + 1);
+    context.fillText(durationText, x + 14 + titleWidth + 8, titleY + 1);
   });
 
   const link = document.createElement("a");
@@ -594,12 +654,12 @@ function placeBlock({ title, duration, color, eventId = null }, clientY) {
   const end = minutesToTime(endMinutes);
 
   if (!isEventInRange(start, end)) {
-    setFeedback("その位置には収まりません。タイムライン内に入る場所へドロップしてください。", true);
+    setFeedback("その位置には収まりません。タイムライン内に入る位置へドロップしてください。", true);
     return false;
   }
 
   if (hasOverlap(start, end, eventId)) {
-    setFeedback("その位置には既存の予定があります。空いている場所へドロップしてください。", true);
+    setFeedback("その位置には既存の予定があります。空いている位置へドロップしてください。", true);
     return false;
   }
 
@@ -668,7 +728,7 @@ availabilityForm.addEventListener("submit", (event) => {
   const nextEnd = dayEndInput.value;
 
   if (!validateAvailability(nextStart, nextEnd)) {
-    setFeedback("終了時刻は開始時刻より後にしてください。", true);
+    setFeedback("終了時間は開始時間より後にしてください。", true);
     return;
   }
 
@@ -677,12 +737,13 @@ availabilityForm.addEventListener("submit", (event) => {
   );
 
   if (outOfRangeEvents.length > 0) {
-    setFeedback("この変更だと、いまの予定が時間帯の外に出てしまいます。先に予定を調整してください。", true);
+    setFeedback("この時間帯だと既存の予定が範囲外になります。先に予定を調整してください。", true);
     return;
   }
 
   state.dayStart = nextStart;
   state.dayEnd = nextEnd;
+  syncDefaultRangeInputs();
   render();
   setFeedback("使える時間を更新しました。");
 });
@@ -713,7 +774,7 @@ eventForm.addEventListener("submit", (event) => {
     const end = eventEndInput.value;
 
     if (!validateAvailability(start, end)) {
-      setFeedback("終了時刻は開始時刻より後にしてください。", true);
+      setFeedback("終了時間は開始時間より後にしてください。", true);
       return;
     }
 
@@ -731,7 +792,7 @@ eventForm.addEventListener("submit", (event) => {
   }
 
   if (duration > getDayDuration()) {
-    setFeedback("そのブロックは使える時間全体より長いため配置できません。", true);
+    setFeedback("そのブロックは使える時間全体より長いため追加できません。", true);
     return;
   }
 
@@ -747,9 +808,8 @@ eventForm.addEventListener("submit", (event) => {
     eventForm.reset();
     eventModeRangeInput.checked = true;
     eventModeDurationInput.checked = false;
-    eventDurationInput.value = "90";
-    eventStartInput.value = "10:00";
-    eventEndInput.value = "11:30";
+    eventDurationInput.value = String(DEFAULT_DURATION_MINUTES);
+    syncDefaultRangeInputs();
     eventColorInput.value = color;
     syncEventModeFields();
     setFeedback(`「${title}」をタイムラインに追加しました。`);
@@ -762,11 +822,10 @@ eventForm.addEventListener("submit", (event) => {
   eventModeDurationInput.checked = mode === "duration";
   eventModeRangeInput.checked = mode === "range";
   eventDurationInput.value = String(duration);
-  eventStartInput.value = "10:00";
-  eventEndInput.value = "11:30";
+  syncDefaultRangeInputs();
   eventColorInput.value = color;
   syncEventModeFields();
-  setFeedback(`「${title}」の未配置ブロックを作成しました。下からタイムラインへドラッグしてください。`);
+  setFeedback(`「${title}」の未配置ブロックを追加しました。下からタイムラインへドラッグしてください。`);
 });
 
 eventList.addEventListener("click", (event) => {
@@ -845,9 +904,16 @@ timeline.addEventListener("click", (event) => {
   }
 
   event.stopPropagation();
+  const currentEvent = findEvent(deleteButton.dataset.eventDelete);
+
+  if (!currentEvent) {
+    return;
+  }
+
+  createPendingBlock(currentEvent.title, getEventDuration(currentEvent), currentEvent.color);
   state.events = state.events.filter((item) => item.id !== deleteButton.dataset.eventDelete);
   render();
-  setFeedback("予定を削除しました。");
+  setFeedback("予定を未配置ブロックに戻しました。");
 });
 
 timeline.addEventListener("dragover", (event) => {
@@ -881,5 +947,6 @@ eventModeRangeInput.addEventListener("change", syncEventModeFields);
 
 window.addEventListener("resize", syncTimelineColumnHeight);
 
+syncDefaultRangeInputs();
 render();
-setFeedback("フォームで未配置ブロックを作って、下からタイムラインへドラッグしてください。配置済みブロックもドラッグで並べ替えられます。");
+setFeedback("フォームで未配置ブロックを作って、下からタイムラインへドラッグしてください。配置済みブロックもドラッグで動かせます。");
